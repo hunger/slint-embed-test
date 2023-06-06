@@ -1,0 +1,35 @@
+import { Button, HorizontalBox, VerticalBox } from "std-widgets.slint";
+
+export component AppWindow inherits Window {
+    in property<component-factory> e1 <=> e1x.component-factory;
+    in property<int> current_component;
+
+    callback clicked <=> button.clicked;
+
+    width: 200px;
+    height: 200px;
+
+    VerticalBox {
+        if root.current-component == 0: Rectangle {
+            background: #f44;
+            height: 10px;
+        }
+        Rectangle {
+            border-color: Colors.black;
+            border-width: 1px;
+
+            VerticalBox {
+                e1x := Embed { }
+
+                if root.current-component == 1: Rectangle {
+                    background: #8f8;
+                    height: 10px;
+                }
+            }
+        }
+        HorizontalBox {
+            button := Button { text: "Switch!"; }
+            Button { text: "Ignore"; }
+        }
+    }
+}
