@@ -11,7 +11,6 @@ build = "build.rs"
 slint = { version = "1.0", path = "../slint/api/rs/slint" }
 slint-interpreter = { version = "1.0", path = "../slint/internal/interpreter", default-features = false, features = ["std", "compat-1-0"] }
 spin_on = "0.1"
-vtable = { version = "0.1", path = "../slint/helper_crates/vtable" }
 
 [build-dependencies]
 slint-build = { version = "1.0", path = "../slint/api/rs/build" }

@@ -1,58 +1,38 @@
 use std::pin::Pin;
 
-use slint::ComponentHandle;
-use slint::private_unstable_api::re_exports::{ComponentFactoryVTable, ComponentFactoryVTable_static};
-use slint::private_unstable_api::re_exports::ComponentRc;
-use slint::private_unstable_api::re_exports::{ComponentFactory, ComponentFactoryBox};
-
-use vtable::*;
+use slint::{Component, ComponentFactoryBox, ComponentHandle};
 
 slint::include_modules!();
 
-struct MyFactory {
-    color: String,
-}
-
-ComponentFactoryVTable_static!(static MY_FACTORY_VT for MyFactory);
-
-impl ComponentFactory for MyFactory {
-    fn build(self: Pin<&Self>) -> Option<ComponentRc> {
-        let mut compiler = slint_interpreter::ComponentCompiler::new();
-        let color = &self.color;
-
-        let e = spin_on::spin_on(compiler.build_from_source(
-            format!(
-                r#"
-        import {{ Button }} from "std-widgets.slint";
-
-        component E1 inherits Rectangle {{
-            width: 150px;
-            height: 50px;
-            background: {color};
-
-            Button {{
-                text: "{color}";
-            }}
-        }}"#
-            ),
-            std::path::PathBuf::from("generated.slint"),
-        ))
-        .unwrap();
-        e.create().ok().map(|h| slint::private_unstable_api::re_exports::VRc::into_dyn(ComponentHandle::into_inner(h)))
-    }
-}
-
 fn create_components(colors: &[&str]) -> Vec<ComponentFactoryBox> {
-
     colors
         .iter()
         .map(|color| {
-            {
-                MyFactory {
-                    color: color.to_string(),
-                }
-            }
-            .into()
+            let color = color.to_string();
+
+            ComponentFactoryBox::new(Box::new(move || {
+                let mut compiler = slint_interpreter::ComponentCompiler::new();
+
+                let e = spin_on::spin_on(compiler.build_from_source(
+                    format!(
+                        r#"
+    import {{ Button }} from "std-widgets.slint";
+
+    component E1 inherits Rectangle {{
+        width: 150px;
+        height: 50px;
+        background: {color};
+
+        Button {{
+            text: "{color}";
+        }}
+    }}"#
+                    ),
+                    std::path::PathBuf::from("generated.slint"),
+                ))
+                .unwrap();
+                e.create().ok().map(|h| Component::from(h))
+            }))
         })
         .collect()
 }
