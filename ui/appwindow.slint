@@ -1,35 +1,52 @@
 import { Button, HorizontalBox, VerticalBox } from "std-widgets.slint";
 
+component Bar inherits Rectangle {
+    height: 10px;
+}
+
 export component AppWindow inherits Window {
     in property<component-factory> e1 <=> e1x.component-factory;
     in property<int> current_component;
+    
+    in-out property<int> switch_count;
+
+    property<bool> red_bar;
+    property<bool> green_bar;
+    property<bool> blue_bar;
+    property<bool> yellow_bar;
+
 
     callback clicked <=> button.clicked;
 
-    width: 200px;
-    height: 200px;
-
     VerticalBox {
-        if root.current-component == 0: Rectangle {
-            background: #f44;
-            height: 10px;
-        }
+        if red_bar: Bar { background: #f88; }
+
         Rectangle {
+            vertical-stretch: 100;
             border-color: Colors.black;
             border-width: 1px;
 
             VerticalBox {
-                e1x := Embed { }
+                if green_bar: Bar { background: #8f8; }
 
-                if root.current-component == 1: Rectangle {
-                    background: #8f8;
-                    height: 10px;
-                }
+                e1x := ComponentContainer { }
+
+                if blue_bar: Bar { background: #88f; }
             }
         }
+
+        if yellow_bar: Bar { background: #ff8; }
+
         HorizontalBox {
             button := Button { text: "Switch!"; }
             Button { text: "Ignore"; }
+        }
+
+        HorizontalBox {
+            Button { text: "red"; clicked => { red_bar = !red_bar; }}
+            Button { text: "green"; clicked => { green_bar = !green_bar; }}
+            Button { text: "blue"; clicked => { blue_bar = !blue_bar; }}
+            Button { text: "yellow"; clicked => { yellow_bar = !yellow_bar; }}
         }
     }
 }

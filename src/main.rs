@@ -1,16 +1,15 @@
-use std::pin::Pin;
-
-use slint::{Component, ComponentFactoryBox, ComponentHandle};
+use slint::{ComponentFactory, ComponentHandle};
 
 slint::include_modules!();
 
-fn create_components(colors: &[&str]) -> Vec<ComponentFactoryBox> {
+fn create_components(colors: &[&str]) -> Vec<ComponentFactory> {
     colors
         .iter()
-        .map(|color| {
+        .enumerate()
+        .map(|(index, color)| {
             let color = color.to_string();
 
-            ComponentFactoryBox::new(Box::new(move || {
+            ComponentFactory::new(move |window| {
                 let mut compiler = slint_interpreter::ComponentCompiler::new();
 
                 let e = spin_on::spin_on(compiler.build_from_source(
@@ -18,22 +17,25 @@ fn create_components(colors: &[&str]) -> Vec<ComponentFactoryBox> {
                         r#"
     import {{ Button }} from "std-widgets.slint";
 
-    component E1 inherits Rectangle {{
-        width: 150px;
-        height: 50px;
+    export component E{index} inherits Rectangle {{
         background: {color};
-
+        width: 100px + 10px * {index};
+        height: 60px + 10px * {index};
+ 
         Button {{
             text: "{color}";
+            width: 80px + 10px * {index};
+            height: 40px + 10px * {index};
+            clicked => {{debug("Button of component with index {index} clicked!");}}
         }}
     }}"#
                     ),
                     std::path::PathBuf::from("generated.slint"),
                 ))
                 .unwrap();
-                e.create().ok().map(|h| Component::from(h))
-            }))
-        })
+                e.embed_into_existing_window(window).ok()
+            })
+        }).chain(std::iter::once(ComponentFactory::default()))
         .collect()
 }
 
@@ -55,6 +57,8 @@ fn main() -> Result<(), slint::PlatformError> {
         };
 
         ui.set_current_component(index);
+        ui.set_switch_count(ui.get_switch_count().wrapping_add(1));
+        eprintln!("XXX Switching to index {index}");
         ui.set_e1(components.get(index as usize).unwrap().clone());
     });
 
